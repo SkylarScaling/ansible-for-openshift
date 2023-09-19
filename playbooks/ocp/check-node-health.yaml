@@ -1,0 +1,10 @@
+---
+- name: Check Cluster Node Health
+  gather_facts: false
+  connection: local
+  hosts: localhost
+  tasks:
+    - name: Perform cluster Node health check
+      include_role:
+        name: ocp_node_health_check
+...
