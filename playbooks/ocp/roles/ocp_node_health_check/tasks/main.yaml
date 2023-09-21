@@ -6,9 +6,13 @@
   k8s_info:
     host: "https://api.{{ cluster_address }}:6443"
     validate_certs: no
-    api_key: "{{ vars[acm_token_var] }}"
+    api_key: "{{ vars[ocp_token_var] }}"
     api_version: v1
     kind: Node
+  register: nodes
 
-
+- name: Output Node Status
+  debug:
+    msg: "{{ item.metadata.name }}"
+  with_items: "{{ nodes.resources }}"
 ...
