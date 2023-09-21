@@ -3,10 +3,12 @@
   include_vars: "{{ ocp_service_account_tokenfile }}"
 
 - name: Get Nodes
-  k8s_facts:
+  k8s_info:
     host: "https://api.{{ cluster_address }}:6443"
     validate_certs: no
     api_key: "{{ vars[acm_token_var] }}"
-    apiVersion: v1
+    api_version: v1
     kind: Node
+
+
 ...

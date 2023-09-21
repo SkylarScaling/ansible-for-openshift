@@ -12,5 +12,5 @@
         - boto3
 
     - name: Install required collections from Ansible Galaxy
-      local_action: command ansible-galaxy collection install -r files/acm-requirements.yaml
+      local_action: command ansible-galaxy collection install -r files/ocp-requirements.yaml
 ...
