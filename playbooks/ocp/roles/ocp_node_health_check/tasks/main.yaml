@@ -2,36 +2,72 @@
 - name: Get API tokenfile
   include_vars: "{{ ocp_service_account_tokenfile }}"
 
-- name: Get Master Nodes
+- name: Get Node Status
+  ansible.builtin.command: oc get nodes
+  register: oc_nodes
+  no_log: true
+
+- name: Node Status
+  debug:
+    msg: "{{ oc_nodes.stdout_lines }}"
+
+- name: Get Top Nodes
+  ansible.builtin.command: oc adm top nodes
+  register: oc_top_nodes
+  no_log: true
+
+- name: Node Utilization
+  debug:
+    msg: "{{ oc_top_nodes.stdout_lines }}"
+
+- name: Get All Nodes
   k8s_info:
     host: "https://api.{{ cluster_address }}:6443"
     validate_certs: no
     api_key: "{{ vars[ocp_token_var] }}"
     api_version: v1
     kind: Node
-    label_selectors:
-      - node-role.kubernetes.io/master
   register: nodes
 
 - name: Get Node Conditions
-  set_fact:
-    master_node_conditions: "{{ item.status.conditions }}"
-  with_items: "{{ nodes.resources }}"
-
-- name: TODO TEMP
   debug:
-    msg:
-      - "Conditions:"
-      - "  {{ item.type }}: {{ item.status }}"
-  with_items: "{{ master_node_conditions }}"
-
-- name: Output Node Status
-  debug:
-    msg:
-      - "Master Nodes: "
-      - "  {{ item.metadata.name }}"
-      - "    Conditions:"
+    msg: "{{ item.status.conditions }}"
   with_items: "{{ nodes.resources }}"
   loop_control:
-    label: "Node: {{ item.metadata.name }}"
+    label: "{{ item.metadata.name }}"
+
+#- name: Get Master Nodes
+#  k8s_info:
+#    host: "https://api.{{ cluster_address }}:6443"
+#    validate_certs: no
+#    api_key: "{{ vars[ocp_token_var] }}"
+#    api_version: v1
+#    kind: Node
+#    label_selectors:
+#      - node-role.kubernetes.io/master
+#  register: nodes
+#
+#- name: Get Node Conditions
+#  set_fact:
+#    master_node_conditions: "{{ item.status.conditions }}"
+#  with_items: "{{ nodes.resources }}"
+#  loop_control:
+#    label: "{{ item.metadata.name }}"
+#
+#- name: TODO TEMP
+#  debug:
+#    msg:
+#      - "Conditions:"
+#      - "  {{ item.type }}: {{ item.status }}"
+#  with_items: "{{ master_node_conditions }}"
+#
+#- name: Output Node Status
+#  debug:
+#    msg:
+#      - "Master Nodes: "
+#      - "  {{ item.metadata.name }}"
+#      - "    Conditions:"
+#  with_items: "{{ nodes.resources }}"
+#  loop_control:
+#    label: "Node: {{ item.metadata.name }}"
 ...
