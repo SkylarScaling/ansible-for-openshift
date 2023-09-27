@@ -3,9 +3,9 @@
   include_vars: "{{ ocp_service_account_tokenfile }}"
 
 - name: login with Service Account
-  ansible.builtin.command: "oc login --token={{ vars[ocp_token_var] }}"
+  ansible.builtin.command: "oc login --token={{ vars[ocp_token_var] }} --server=https://api.{{ cluster_address }}:6443"
   register: oc_nodes
-  no_log: true
+  #no_log: true
 
 - name: Get Node Status
   ansible.builtin.command: oc get nodes
