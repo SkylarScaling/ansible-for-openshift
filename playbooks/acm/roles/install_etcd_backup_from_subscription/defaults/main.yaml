@@ -1,0 +1,5 @@
+---
+state: present
+app_name: etcd-automated-backup
+app_namespace: etcd-backup-policies
+...

@@ -1,0 +1,58 @@
+---
+apiVersion: app.k8s.io/v1beta1
+kind: Application
+metadata:
+  name: "{{ app_name }}"
+  namespace: "{{ app_namespace }}"
+spec:
+  componentKinds:
+    - group: apps.open-cluster-management.io
+      kind: Subscription
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - "{{ app_name }}"
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: Channel
+metadata:
+  annotations:
+    apps.open-cluster-management.io/reconcile-rate: medium
+  name: etcd-backup-policies-channel
+  namespace: "{{ app_namespace }}"
+spec:
+  type: Git
+  pathname: https://github.com/matthew-willis-redhat/acm-etcd-backup.git
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: Subscription
+metadata:
+  name: etcd-backup-policies-subscription
+  namespace: "{{ app_namespace }}"
+  annotations:
+    apps.open-cluster-management.io/git-branch: main
+    apps.open-cluster-management.io/git-path: ""
+    apps.open-cluster-management.io/reconcile-option: merge
+  labels:
+    app: "{{ app_name }}"
+spec:
+  channel: etcd-backup-policies/etcd-backup-policies-channel
+  placement:
+    placementRef:
+      kind: PlacementRule
+      name: etcd-backup-policies-placement
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+  name: etcd-backup-policies-placement
+  namespace: "{{ app_namespace }}"
+  labels:
+    app: "{{ app_name }}"
+spec:
+  clusterSelector:
+    matchLabels:
+      name: local-cluster
+...

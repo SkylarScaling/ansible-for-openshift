@@ -1,0 +1,9 @@
+---
+- name: Install automated etcd backup CronJob via Advanced Cluster Management (RHACM)
+  gather_facts: false
+  hosts: localhost
+  tasks:
+    - name: Install etcd backup
+      include_role:
+        name: install_etcd_backup_from_subscription
+...
