@@ -10,29 +10,6 @@
   register: oc_nodes
   no_log: true
 
-#- name: pick up the lines we are interested in.
-#  set_fact:
-#    important_lines: "{{ important_lines|default([]) +  [item] }}"
-#  when: item.split('  ') #| length == 6
-#  with_items: "{{ oc_nodes.stdout_lines }}"
-
-- name: find the line with the name we are looking for in 2nd column
-  set_fact:
-    target_line: "{{ item }}"
-  when: item|trim is search('Ready')
-  with_items: "{{ oc_nodes.stdout_lines }}"
-
-#- name: print results
-#  debug:
-#    msg: "{{ target_line.split('   ')[0]|trim }} -- {{ target_line.split('   ')[1]|trim }} -- {{ target_line.split('   ')[2]|trim }} -- {{ target_line.split('   ')[3]|trim }}"
-
-- name: print results
-  debug:
-    msg: "{{ item.split('   ')[0]|trim }} -- {{ item.split('   ')[1]|trim }} -- {{ item.split('   ')[2]|trim }}"
-  with_items: "{{ oc_nodes.stdout_lines[1:] }}"
-  loop_control:
-    label: "Node: "
-
 - name: Node Status
   debug:
     msg: "{{ oc_nodes.stdout_lines }}"
@@ -45,4 +22,15 @@
 - name: Node Utilization
   debug:
     msg: "{{ oc_top_nodes.stdout_lines }}"
+
+- name: Look for nodes NOT in Ready state
+  debug:
+    msg:
+    - "{{ item.split('   ')[0]|trim }} is not in Ready state!"
+    - "  State: {{ item.split('   ')[1]|trim }}"
+    - "  Node Type: {{ item.split('   ')[2]|trim }}"
+  when: item|trim is not search('Ready')
+  with_items: "{{ oc_nodes.stdout_lines[1:] }}"
+  loop_control:
+    label: "NODE NOT READY: "
 ...
