@@ -21,3 +21,11 @@ Example:
 ```
 ansible-playbook install-acs-via-acm.yaml --vault-password-file=~/.passfile -e cluster_address=<cluster address>
 ```
+
+# Install OpenShift Pipelines via ACM Subscription
+`install_ocp_pipelines_from_subscription` installs OpenShift Pipelines to all managed clusters using ACM policies, created using a Subscription.
+
+Example:
+```
+ansible-playbook install-pipelines-via-acm.yaml --vault-password-file=~/.passfile -e cluster_address=<cluster address>
+```
