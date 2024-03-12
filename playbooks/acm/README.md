@@ -1,6 +1,6 @@
 # Install Prerequisites
 ```
-$ ansible-playbook install-acm-prerequisites.yaml --ask-become-pass
+ansible-playbook install-acm-prerequisites.yaml --ask-become-pass
 ```
 
 # Create ACM Service Account
@@ -8,8 +8,10 @@ $ ansible-playbook install-acm-prerequisites.yaml --ask-become-pass
 
 Example:
 ```
-$ oc login <cluster admin login>
-$ ansible-playbook create-acm-service-account.yaml -e cluster_address=<cluster address>
+oc login <cluster admin login>
+```
+```
+ansible-playbook create-acm-service-account.yaml -e cluster_address=<cluster address>
 ```
 
 # Install ACS via ACM Subscription
@@ -17,5 +19,5 @@ $ ansible-playbook create-acm-service-account.yaml -e cluster_address=<cluster a
 
 Example:
 ```
-$ ansible-playbook install-acs-via-acm.yaml -e cluster_address=<cluster address> --vault-password-file=~/.passfile
+ansible-playbook install-acs-via-acm.yaml --vault-password-file=~/.passfile -e cluster_address=<cluster address>
 ```
