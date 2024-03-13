@@ -1,0 +1,9 @@
+---
+- name: Install Red Hat OpenShift GitOps (ArgoCD) operator via Advanced Cluster Management (RHACM)
+  gather_facts: false
+  hosts: localhost
+  tasks:
+    - name: Install OpenShift GitOps
+      include_role:
+        name: install_ocp_gitops_from_subscription
+...
