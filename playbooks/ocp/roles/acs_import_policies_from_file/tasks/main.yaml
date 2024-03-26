@@ -1,0 +1,18 @@
+---
+- name: Import policies into ACS
+  ansible.builtin.uri:
+    url: "https://{{ acs_central_endpoint }}/v1/policies/import"
+    validate_certs: no
+    method: POST
+    body_format: json
+    status_code: [ 200 ]
+    return_content: true
+    headers:
+      Content-Type: application/json
+      Authorization: "Bearer {{ acs_api_token }}"
+    body:
+      metadata:
+        overwrite: "{{ overwrite_existing_policies | bool }}"
+      policies: "{{ lookup('file', policy_file_src) }}"
+  register: api_return
+...
