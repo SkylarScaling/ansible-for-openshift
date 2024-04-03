@@ -1,7 +1,21 @@
 # Introduction
 This repository contains re-usable playbooks for use with OpenShift Container Platform, using Ansible automation.
 
-# Getting Started
+# Running Playbooks
+
+## Export All Policies from ACS
+
+```
+ansible-playbook acs-export-all-policies.yaml
+```
+
+## Import ACS Policies from File
+
+```
+ansible-playbook acs-import-policies-from-file.yaml
+```
+
+# Using this Repository
 
 ## Installation Process
 To work with this repository locally you will need clone it using https or ssh authentication.
