@@ -1,4 +1,5 @@
 ---
+state: present
 ocp_service_account_tokenfile: "~/.ocp-token"
 ocp_token_var: "ocp_api_token"
 ...

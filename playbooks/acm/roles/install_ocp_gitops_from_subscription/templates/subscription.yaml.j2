@@ -24,7 +24,18 @@ metadata:
   namespace: "{{ app_namespace }}"
 spec:
   type: Git
-  pathname: https://github.com/skylarscaling/acm-install-openshift-gitops.git
+  pathname: "{{ subscription_repo_url }}"
+#  secretRef: # Uncomment if using private repo
+#    name: acm-gitops-policy-git-secret
+#---
+#apiVersion: v1 # Uncomment if using private repo
+#kind: Secret
+#metadata:
+#  name: acm-gitops-policy-git-secret
+#  namespace: "{{ app_namespace }}"
+#data:
+#  user: cmVwbGFjZQo=
+#  accessToken: cmVwbGFjZQo=
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: Subscription
@@ -32,7 +43,7 @@ metadata:
   name: gitops-install-policy-subscription
   namespace: "{{ app_namespace }}"
   annotations:
-    apps.open-cluster-management.io/git-branch: main
+    apps.open-cluster-management.io/git-branch: "{{ subscription_branch }}"
     apps.open-cluster-management.io/git-path: ""
     apps.open-cluster-management.io/reconcile-option: replace
   labels:
