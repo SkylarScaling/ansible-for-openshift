@@ -22,6 +22,10 @@
     - name: "OpenShift CLI login"
       shell: "oc login -u {{ cluster_admin_user }} -p {{ cluster_admin_password }} https://api.{{ ocp_cluster_address }}:6443 --insecure-skip-tls-verify"
 
+    - name: Include Vars from group_vars
+      include_vars:
+        dir: acm/group_vars
+
     - name: Set Playbook Facts
       set_fact:
         cluster_address: "{{ ocp_cluster_address }}"
@@ -35,5 +39,17 @@
         name: ../acm/roles/admin_create_acm_service_account
 
     - include_role:
+        name: ../acm/roles/install_odf_from_subscription
+
+    - include_role:
         name: ../acm/roles/install_acs_from_subscription
+
+    - include_role:
+        name: ../acm/roles/install_quay_from_subscription
+
+    - include_role:
+        name: ../acm/roles/install_ocp_gitops_from_subscription
+
+    - include_role:
+        name: ../acm/roles/install_ocp_pipelines_from_subscription
 ...
