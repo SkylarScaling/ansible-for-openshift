@@ -1,0 +1,26 @@
+---
+- name: Get all Red Hat Advanced Cluster Security (RHACS) Policies as json via the ACS API
+  gather_facts: false
+  hosts: localhost
+  vars_prompt:
+    - name: acs_central_endpoint
+      prompt: Enter ACS Central Endpoint
+      private: no
+      confirm: no
+    - name: acs_api_token
+      prompt: Enter ACS API Token
+      private: no
+      confirm: no
+    - name: policy_id
+      prompt: Enter policy ID
+      private: no
+      confirm: no
+    - name: policy_file_dest
+      prompt: Enter destination directory for Policies file
+      private: no
+      confirm: no
+  tasks:
+    - name: Get ACS Policies
+      include_role:
+        name: acs_export_policy_by_id
+...
