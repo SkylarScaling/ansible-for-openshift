@@ -1,0 +1,22 @@
+---
+- name: Get Policy from ACS
+  ansible.builtin.uri:
+    url: "https://{{ acs_central_endpoint }}/v1/policies/{{ policy_id }}"
+    validate_certs: no
+    method: GET
+    body_format: json
+    status_code: [200]
+    return_content: true
+    headers:
+      Content-Type: application/json
+      Authorization: "Bearer {{ acs_api_token }}"
+  register: api_return
+
+- name: Copy Policies to file
+  copy:
+    content: "{{ api_return.json }}"
+    dest: "{{ policy_file_dest }}/policies.json"
+
+- debug:
+    msg: "Policies saved to {{ policy_file_dest }}/policies.json"
+...

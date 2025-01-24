@@ -3,22 +3,22 @@
   gather_facts: false
   hosts: localhost
   vars_prompt:
-    - name: acs_central_endpoint
-      prompt: Enter ACS Central Endpoint
-      private: no
-      confirm: no
-    - name: acs_api_token
-      prompt: Enter ACS API Token
-      private: no
-      confirm: no
-    - name: policy_file_src
-      prompt: Enter source filepath for Policies file
-      private: no
-      confirm: no
-    - name: overwrite_existing_policies
-      prompt: Overwrite existing policies? (true/false)
-      private: no
-      confirm: no
+#    - name: acs_central_endpoint
+#      prompt: Enter ACS Central Endpoint
+#      private: no
+#      confirm: no
+#    - name: acs_api_token
+#      prompt: Enter ACS API Token
+#      private: no
+#      confirm: no
+#    - name: policy_file_src
+#      prompt: Enter source filepath for Policies file
+#      private: no
+#      confirm: no
+#    - name: overwrite_existing_policies
+#      prompt: Overwrite existing policies? (true/false)
+#      private: no
+#      confirm: no
   tasks:
     - name: Get ACS Policies
       include_role:
