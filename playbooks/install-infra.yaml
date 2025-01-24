@@ -19,37 +19,20 @@
   #      private: yes
   #      confirm: no
   tasks:
-    - name: "OpenShift CLI login"
-      shell: "oc login -u {{ cluster_admin_user }} -p {{ cluster_admin_password }} https://api.{{ ocp_cluster_address }}:6443 --insecure-skip-tls-verify"
+    - debug:
+        msg: "Performing cluster configuration"
 
-    - name: Include Vars from group_vars
-      include_vars:
-        dir: acm/group_vars
+- name: Install ACM
+  ansible.builtin.import_playbook: ../playbooks/ocp/install-acm.yaml
+  vars:
+    cluster_address: "{{ ocp_cluster_address }}"
+    admin_user: "{{ cluster_admin_user }}"
+    admin_password: "{{ cluster_admin_password }}"
 
-    - name: Set Playbook Facts
-      set_fact:
-        cluster_address: "{{ ocp_cluster_address }}"
-        admin_user: "{{ cluster_admin_user }}"
-        admin_password: "{{ cluster_admin_password }}"
-
-    - include_role:
-        name: ../ocp/roles/install_acm
-
-    - include_role:
-        name: ../acm/roles/admin_create_acm_service_account
-
-    - include_role:
-        name: ../acm/roles/install_odf_from_subscription
-
-    - include_role:
-        name: ../acm/roles/install_acs_from_subscription
-
-    - include_role:
-        name: ../acm/roles/install_quay_from_subscription
-
-    - include_role:
-        name: ../acm/roles/install_ocp_gitops_from_subscription
-
-    - include_role:
-        name: ../acm/roles/install_ocp_pipelines_from_subscription
+- name: Perform Day 2 Configuration
+  ansible.builtin.import_playbook: ../playbooks/acm/day2-config.yaml
+  vars:
+    cluster_address: "{{ ocp_cluster_address }}"
+    admin_user: "{{ cluster_admin_user }}"
+    admin_password: "{{ cluster_admin_password }}"
 ...
