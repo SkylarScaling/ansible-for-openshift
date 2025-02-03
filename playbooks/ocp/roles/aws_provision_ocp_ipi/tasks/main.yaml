@@ -1,23 +1,61 @@
 ---
-- name: create install_dir to work in
-  ansible.builtin.file:
-    state: directory
-    path: "{{ working_dir }}/install/{{ ocp_cluster.name }}"
-  register: install_dir
+- name: Check if Cluster Already Exists
+  block:
+    - set_fact:
+        cluster_exists: false
 
-- name: print install_dir location for admin
-  ansible.builtin.debug:
-    msg: "The working directory location is {{ install_dir.path }}"
+    - name: Check if cluster config already exists
+      ansible.builtin.stat:
+        path: "{{ working_dir }}/install/{{ cluster_name }}"
+      register: cluster_dir
 
-- name: copy install-config.yaml into install_dir
-  ansible.builtin.template:
-    src: "{{ role_path }}/templates/install-config.yaml.j2"
-    dest: "{{ install_dir.path }}/install-config.yaml"
+    - name: Get kubeadmin password
+      set_fact:
+        kubeadmin_pass: "{{ lookup('file','{{ working_dir }}/install/{{ cluster_name }}/auth/kubeadmin-password') }}"
 
-- name: run IPI installer
-  command: "{{ bin_dir }}/openshift-install create cluster --dir={{ install_dir.path }}"
-  register: cluster_deploy
+    - name: Check if cluster auth is working
+      ansible.builtin.command:
+        argv:
+          - oc
+          - login
+          - -u
+          - kubeadmin
+          - -p
+          - "{{ kubeadmin_pass }}"
+          - "https://api.{{ cluster_name }}.{{ base_domain }}:{{ k8s_port }}"
+          - --insecure-skip-tls-verify
+      register: result
 
-- name: Set kubeconfig fact
-  set_fact:
-    kubeconfig: "{{ working_dir }}/install/{{ cluster_name }}/auth/kubeconfig"
+    - set_fact:
+        cluster_exists: true
+      when: result.rc == 0
+
+- debug:
+    msg: "Cluster Already Exists, Skipping Provisioning"
+  when: cluster_exists is true
+
+- name: Provision Cluster
+  block:
+    - name: create install_dir to work in
+      ansible.builtin.file:
+        state: directory
+        path: "{{ working_dir }}/install/{{ cluster_name }}"
+      register: install_dir
+
+    - name: print install_dir location for admin
+      ansible.builtin.debug:
+        msg: "The working directory location is {{ install_dir.path }}"
+
+    - name: copy install-config.yaml into install_dir
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/install-config.yaml.j2"
+        dest: "{{ install_dir.path }}/install-config.yaml"
+
+    - name: run IPI installer
+      command: "{{ bin_dir }}/openshift-install create cluster --dir={{ install_dir.path }}"
+      register: cluster_deploy
+
+    - name: Set kubeconfig fact
+      set_fact:
+        kubeconfig: "{{ working_dir }}/install/{{ cluster_name }}/auth/kubeconfig"
+  when: cluster_exists is false
