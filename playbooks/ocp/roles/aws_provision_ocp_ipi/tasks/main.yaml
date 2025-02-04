@@ -1,14 +1,14 @@
 ---
+- set_fact:
+    cluster_exists: false
+
+- name: Check if cluster config already exists
+  ansible.builtin.stat:
+    path: "{{ working_dir }}/install/{{ cluster_name }}/auth/kubeadmin-password"
+  register: cluster_creds
+
 - name: Check if Cluster Already Exists
   block:
-    - set_fact:
-        cluster_exists: false
-
-    - name: Check if cluster config already exists
-      ansible.builtin.stat:
-        path: "{{ working_dir }}/install/{{ cluster_name }}"
-      register: cluster_dir
-
     - name: Get kubeadmin password
       set_fact:
         kubeadmin_pass: "{{ lookup('file','{{ working_dir }}/install/{{ cluster_name }}/auth/kubeadmin-password') }}"
@@ -29,6 +29,7 @@
     - set_fact:
         cluster_exists: true
       when: result.rc == 0
+  when: cluster_creds.stat.exists
 
 - debug:
     msg: "Cluster Already Exists, Skipping Provisioning"
@@ -54,6 +55,9 @@
     - name: run IPI installer
       command: "{{ bin_dir }}/openshift-install create cluster --dir={{ install_dir.path }}"
       register: cluster_deploy
+
+    - debug:
+        msg: "{{ cluster_deploy }}"
 
     - name: Set kubeconfig fact
       set_fact:
