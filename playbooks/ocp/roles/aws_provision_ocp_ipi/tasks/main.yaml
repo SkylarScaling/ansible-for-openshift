@@ -9,8 +9,6 @@
   ansible.builtin.debug:
     msg: "The working directory location is {{ install_dir.path }}"
 
-#TODO Check if cluster already exists
-
 - name: Create .aws directory
   ansible.builtin.file:
     path: "~/.aws"
@@ -38,7 +36,7 @@
 
 - name: run IPI installer
   command: "{{ bin_dir }}/openshift-install create cluster --dir={{ install_dir.path }} --log-level=debug"
-  async: 15
+  async: 3600
   poll: 0
   register: cluster_deploy
 

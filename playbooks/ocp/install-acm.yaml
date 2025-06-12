@@ -19,12 +19,14 @@
 #      private: yes
 #      confirm: no
   tasks:
-    - name: "OpenShift CLI login"
-      shell: "oc login -u {{ cluster_admin_user }} -p {{ cluster_admin_password }} https://api.{{ ocp_cluster_address }}:6443 --insecure-skip-tls-verify"
+    - include_role:
+        name: admin_oc_login
+      vars:
+        cluster_address: "{{ ocp_cluster.name }}.{{ ocp_cluster.base_domain }}"
 
     - name: Set Playbook Facts
       set_fact:
-        cluster_address: "{{ ocp_cluster_address }}"
+        cluster_address: "{{ ocp_cluster.name }}.{{ ocp_cluster.base_domain }}"
 
     - include_role:
         name: install_acm
