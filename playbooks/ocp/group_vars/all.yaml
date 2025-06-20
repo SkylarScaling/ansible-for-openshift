@@ -1,4 +1,6 @@
 ---
+bin_dir: /usr/local/bin
+working_dir: /home/sscaling/tmp
 state: present
 k8s_port: 6443
 ocp_service_account_tokenfile: "~/.ocp-token"

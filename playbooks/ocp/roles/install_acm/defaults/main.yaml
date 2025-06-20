@@ -1,4 +1,4 @@
 ---
 state: present
-release_channel: release-2.11
+release_channel: release-2.13
 ...

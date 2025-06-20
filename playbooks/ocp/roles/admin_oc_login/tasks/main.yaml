@@ -13,4 +13,4 @@
 
 - name: "OpenShift CLI login"
   shell: "oc login -u {{ admin_user }} -p {{ admin_password }} https://api.{{ cluster_address }}:{{ k8s_admin_port }} {{ insecure }}"
-  when: result.rc == 1
+  when: result.rc == 1 or force == true

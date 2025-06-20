@@ -22,6 +22,7 @@
     - include_role:
         name: admin_oc_login
       vars:
+        force: true
         cluster_address: "{{ ocp_cluster.name }}.{{ ocp_cluster.base_domain }}"
 
     - name: Set Playbook Facts
