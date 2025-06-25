@@ -1,0 +1,57 @@
+---
+- name: Set MachineSet name suffix
+  ansible.builtin.set_fact:
+    machineset_name_suffix: "{{ node_role }}-{{ aws.aws_region }}{{ item }}"
+
+- name: Set AZ a fact
+  ansible.builtin.set_fact:
+    az: "{{ aws.aws_region }}{{ item }}"
+
+- name: Get subnet for AZ 'a'
+  ansible.builtin.set_fact:
+    subnet_a_id: "{{ item.id }}"
+  loop: "{{ subnet_info_result.subnets }}"
+  when: item.availability_zone == az
+  loop_control:
+    label: "{{ item.id }}" # Make the debug output easier to read by showing subnet ID
+  # Loop through each found subnet and display its relevant information.
+
+- name: Generate MachineSet YAML from template
+  ansible.builtin.template:
+    #src: "{{ role_path }}/templates/machineset.yaml.j2" #TODO Use when this is in a Role
+    src: "{{ playbook_dir }}/roles/aws_create_machineset/templates/machineset.yaml.j2"
+    dest: "{{ working_dir }}/{{ cluster_id }}-{{ machineset_name_suffix }}.yaml"
+  # The `vars` passed here are available within the Jinja2 template.
+  vars:
+    machineset_name_suffix: "{{ machineset_name_suffix }}"
+    replicas: "{{ nodes_to_add }}"
+    region: "{{ aws.aws_region }}"
+    availability_zone_suffix: "{{ item }}"
+    ami_id: "{{ ami_id }}" # Now using the dynamically fetched AMI ID
+    subnet_id: "{{ subnet_a_id }}"
+    # disk_size_gb: "{{ disk_size_gb | default(omit) }}" # Pass only if defined
+    # disk_type: "{{ disk_type | default(omit) }}"
+    # disk_iops: "{{ disk_iops | default(omit) }}"
+
+- name: Apply the generated MachineSet YAML to OpenShift cluster
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ working_dir }}/{{ cluster_id }}-{{ machineset_name_suffix }}.yaml"
+    # The `kubeconfig` parameter specifies the path to your kubeconfig file.
+    # If not specified, Ansible will look for KUBECONFIG environment variable
+    # or default locations (~/.kube/config).
+    # kubeconfig: "{{ lookup('env', 'KUBECONFIG') | default('~/.kube/config') }}"
+  register: machineset_apply_result
+
+- name: Display MachineSet application result
+  ansible.builtin.debug:
+    msg: "MachineSet {{ cluster_id }}-{{ machineset_name_suffix }} application status: {{ machineset_apply_result }}"
+
+- ansible.builtin.set_fact:
+    new_machineset:
+      - "{{ cluster_id }}-{{ machineset_name_suffix }}"
+
+- name: Add a new value to machinesets
+  ansible.builtin.set_fact:
+    machinesets: "{{ machinesets + [new_machineset] }}"
+...

@@ -48,6 +48,7 @@
   with_fileglob:
     - "{{ working_dir }}/*.yaml"
 
+#TODO This stopped working in OCP 4.16
 - name: Get ServiceAccount Secret
   k8s_info:
     host: "https://api.{{ cluster_address }}:6443"
@@ -57,6 +58,7 @@
   register: sa_secrets
   when: state == "present"
 
+#TODO This stopped working in OCP 4.16
 - name: Get Service Account token
   set_fact:
     sa_token: "{{ item.data.token | b64decode }}"

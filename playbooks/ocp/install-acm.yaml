@@ -22,8 +22,10 @@
     - include_role:
         name: admin_oc_login
       vars:
-        force: true
+        force: true #TODO This might not be needed anymore if k8s_auth works
         cluster_address: "{{ ocp_cluster.name }}.{{ ocp_cluster.base_domain }}"
+        openshift_username: "{{ admin_user }}"
+        openshift_password: "{{ admin_password }}"
 
     - name: Set Playbook Facts
       set_fact:

@@ -1,0 +1,43 @@
+---
+
+
+- name: Wait for machines to be created and Running
+  kubernetes.core.k8s_info:
+    api_version: machine.openshift.io/v1beta1
+    kind: Machine
+    namespace: "{{ openshift_machine_api_namespace }}"
+    label_selectors:
+      - "machine.openshift.io/machineset={{ cluster_id }}-{{ machineset_name_suffix }}"
+  register: machine_creation_status
+  until: >
+    machine_creation_status.resources | length >= nodes_to_add and
+    machine_creation_status.resources[0].status is defined and
+    machine_creation_status.resources[0].status.phase == "Running"
+  retries: 360 # Check every 10 seconds for 60 minutes (360 * 10 = 3600 seconds)
+  delay: 10 # Delay in seconds between retries
+  # This task uses the k8s_info module to check if a Machine resource with the
+  # specified name exists in the given namespace.
+  # `until: machine_creation_status.resources | length > 0` ensures that the task
+  # will retry until at least one resource matching the criteria is found.
+  # `retries` and `delay` define how long and how often it will check.
+
+- name: Wait for nodes to be created and Ready
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Node
+    label_selectors:
+      - "node-role.kubernetes.io/infra="
+  register: node_creation_status
+  until: >
+    node_creation_status.resources | length >= nodes_to_add and
+    node_creation_status.resources[0].status is defined and
+    (node_creation_status.resources[0].status.conditions | selectattr('type', 'equalto', 'Ready') |
+    selectattr('status', 'equalto', 'True') | list | length >= nodes_to_add)
+  retries: 360 # Check every 10 seconds for 60 minutes (360 * 10 = 3600 seconds)
+  delay: 10 # Delay in seconds between retries
+  # This task uses the k8s_info module to check if a Machine resource with the
+  # specified name exists in the given namespace.
+  # `until: machine_creation_status.resources | length > 0` ensures that the task
+  # will retry until at least one resource matching the criteria is found.
+  # `retries` and `delay` define how long and how often it will check.
+...
