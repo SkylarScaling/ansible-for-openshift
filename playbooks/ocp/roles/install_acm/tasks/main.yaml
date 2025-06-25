@@ -40,12 +40,12 @@
         name: advanced-cluster-management
         source: redhat-operators
         sourceNamespace: openshift-marketplace
-#        config:
-#          nodeSelector:
-#            node-role.kubernetes.io/infra: ""
-#          tolerations:
-#            - key: node-role.kubernetes.io/infra
-#              effect: NoSchedule
+        config:
+          nodeSelector:
+            node-role.kubernetes.io/infra: ""
+          tolerations:
+            - key: node-role.kubernetes.io/infra
+              effect: NoSchedule
 
 - name: Wait for ACM Hub Operator Deployment to become available
   kubernetes.core.k8s_info:
@@ -83,12 +83,12 @@
         name: multiclusterhub
         namespace: open-cluster-management
       spec:
-#        nodeSelector:
-#          node-role.kubernetes.io/infra: ""
-#        tolerations:
-#          - key: node-role.kubernetes.io/infra
-#            effect: NoSchedule
-#        availabilityConfig: High
+        nodeSelector:
+          node-role.kubernetes.io/infra: ""
+        tolerations:
+          - key: node-role.kubernetes.io/infra
+            effect: NoSchedule
+        availabilityConfig: High
 
 - name: Wait for ACM MultiClusterHub to become available
   kubernetes.core.k8s_info:

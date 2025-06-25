@@ -145,15 +145,11 @@
   ansible.builtin.set_fact:
     machinesets: []
 
-#LOOP1
 - name: "Create MachineSet for {{ az1 }}"
   include_tasks: create_machineset.yaml
   loop: "{{ availability_zones }}"
-#END LOOP1
 
-#LOOP2
 - name: "Wait for Nodes to start"
   include_tasks: wait_for_nodes.yaml
   loop: "{{ machinesets }}"
-#ENDLOOP2
 ...
