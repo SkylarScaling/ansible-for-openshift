@@ -1,9 +1,9 @@
 ---
 - include_role:
-    name: admin_get_service_account_token
+    name: "{{ ocp_roles }}/admin_oc_login"
   vars:
-    service_account_name: "{{ acm_service_account_name }}"
-    service_account_namespace: "{{ acm_service_account_namespace }}"
+    openshift_token: "{{ sa_token }}"
+    openshift_username: "{{ acm_service_account_name }}"
 
 - name: Create temporary directory for template files
   tempfile:
@@ -21,9 +21,6 @@
 
 - name: Create App Namespace
   k8s:
-    host: "https://api.{{ cluster_address }}:6443"
-    validate_certs: no
-    api_key: "{{ sa_token }}"
     state: "{{ state }}"
     definition:
       apiVersion: v1
@@ -33,9 +30,6 @@
 
 - name: Apply ACS install module repo subscription
   k8s:
-    host: "https://api.{{ cluster_address }}:6443"
-    validate_certs: no
-    api_key: "{{ sa_token }}"
     src: "{{ working_dir }}/subscription.yaml"
     state: "{{ state }}"
 ...

@@ -1,8 +1,6 @@
 ---
 - name: Create ACM Namespace
   kubernetes.core.k8s:
-    host: "https://api.{{ cluster_address }}:6443"
-    validate_certs: no
     state: "{{ state }}"
     definition:
       apiVersion: v1
@@ -12,8 +10,6 @@
 
 - name: Create OperatorGroup for ACM Operator
   kubernetes.core.k8s:
-    host: "https://api.{{ cluster_address }}:6443"
-    validate_certs: no
     state: "{{ state }}"
     api_version: operators.coreos.com/v1
     definition:
@@ -29,8 +25,6 @@
 
 - name: Create Subscription for ACM Operator
   kubernetes.core.k8s:
-    host: "https://api.{{ cluster_address }}:6443"
-    validate_certs: no
     state: "{{ state }}"
     api_version: operators.coreos.com/v1alpha1
     definition:
@@ -55,8 +49,6 @@
 
 - name: Wait for ACM Hub Operator Deployment to become available
   kubernetes.core.k8s_info:
-    host: "https://api.{{ cluster_address }}:6443"
-    validate_certs: no
     kind: Deployment
     name: multiclusterhub-operator
     namespace: open-cluster-management
@@ -83,8 +75,6 @@
 
 - name: Create MultiClusterHub
   kubernetes.core.k8s:
-    host: "https://api.{{ cluster_address }}:6443"
-    validate_certs: no
     state: "{{ state }}"
     api_version: operator.open-cluster-management.io/v1
     definition:
@@ -102,8 +92,6 @@
 
 - name: Wait for ACM MultiClusterHub to become available
   kubernetes.core.k8s_info:
-    host: "https://api.{{ cluster_address }}:6443"
-    validate_certs: no
     kind: MultiClusterHub
     name: multiclusterhub
     namespace: open-cluster-management

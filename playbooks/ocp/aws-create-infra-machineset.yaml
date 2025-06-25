@@ -1,0 +1,36 @@
+---
+# This playbook creates a new MachineSet for infrastructure nodes in an OpenShift 4.18 cluster on AWS.
+#
+# Prerequisites:
+# - An OpenShift 4.18 cluster deployed on AWS.
+# - Ansible installed.
+# - `oc` CLI installed and configured with credentials to your OpenShift cluster
+#   (e.g., `oc login ...`). The user associated with the credentials must have
+#   permissions to view, create, and patch MachineSets in the `openshift-machine-api` namespace.
+# - The `kubernetes.core` Ansible collection must be installed (`ansible-galaxy collection install kubernetes.core`).
+#
+# Usage:
+# ansible-playbook aws-create-infra-machineset.yml
+#
+- name: Create New Infrastructure MachineSet and Nodes
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  collections:
+    - kubernetes.core # Required for k8s_info and k8s modules
+  vars:
+    # The namespace where OpenShift MachineSets are managed.
+    openshift_machine_api_namespace: "openshift-machine-api"
+  tasks:
+    - name: Set AZ suffixes
+      ansible.builtin.set_fact:
+        availability_zones:
+          - a
+          - b
+          - c
+
+    - include_role:
+        name: aws_create_machineset
+      vars:
+        node_role: infra
+        instance_type: "{{ install_config.infras.instance_type }}"

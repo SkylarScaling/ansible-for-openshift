@@ -1,0 +1,155 @@
+---
+- ansible.builtin.set_fact:
+    nodes_to_add: 1
+    # This can be made variable, but for simplicity we are creating ONE node PER availability zone
+    # Increasing this value will create that number of nodes PER availability zone
+
+- name: Ensure the 'aws-credentials' secret exists in the specified namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: aws-credentials
+        namespace: "{{ openshift_machine_api_namespace }}"
+      type: Opaque # Or a more specific type like 'kubernetes.io/basic-auth' if appropriate for your use case
+      data:
+        # AWS Access Key ID must be base64 encoded
+        aws_access_key_id: "{{ aws.aws_access_key_id | b64encode }}"
+        # AWS Secret Access Key must be base64 encoded
+        aws_secret_access_key: "{{ aws.aws_secret_access_key | b64encode }}"
+  # Register the result to check for changes
+  register: secret_creation_result
+
+- name: Display secret creation status
+  ansible.builtin.debug:
+    msg: "Secret 'aws-credentials' created/updated in namespace '{{ openshift_machine_api_namespace }}'. Changed: {{ secret_creation_result.changed }}"
+
+- name: Get all MachineSets in openshift-machine-api namespace
+  kubernetes.core.k8s_info:
+    api_version: machine.openshift.io/v1beta1
+    kind: MachineSet
+    namespace: openshift-machine-api # MachineSets are typically in this namespace
+    # kubeconfig: "{{ kubeconfig_path }}" # Uncomment if specifying a custom kubeconfig path
+  register: template_machineset_info
+  # Ignore errors if the namespace or resource type doesn't exist,
+  # but ideally, you'd want to ensure cluster access is working.
+  ignore_errors: true
+
+- name: Check if MachineSets were found
+  ansible.builtin.debug:
+    msg: "No MachineSets found or an error occurred. Please ensure your kubeconfig is valid and you have access to the cluster."
+  when: not template_machineset_info.resources | default([])
+
+- name: Set worker_node variable with the first worker machineset
+  set_fact:
+    worker_node: "{{ template_machineset_info.resources | selectattr('metadata.name', 'search', 'worker') | first | default(None) }}"
+
+- name: Store parsed cluster_id into a variable
+  ansible.builtin.set_fact:
+    cluster_id: "{{ worker_node.metadata.name.split('-worker')[0] }}"
+  # Only set the fact if at least one MachineSet was found
+  when: template_machineset_info.resources | default([]) | length > 0
+
+- name: Store parsed MachineSet name into a variable
+  ansible.builtin.set_fact:
+    source_machineset_name: "{{ worker_node.metadata.name }}"
+  # Only set the fact if at least one MachineSet was found
+  when: template_machineset_info.resources | default([]) | length > 0
+
+- debug:
+    msg: "Parsed Cluster ID ({{ cluster_id }}) and MachineSet name ({{ source_machineset_name }})."
+
+- name: Fetch AMI ID from existing MachineSet
+  kubernetes.core.k8s_info:
+    api_version: machine.openshift.io/v1beta1
+    kind: MachineSet
+    name: "{{ source_machineset_name }}"
+    namespace: openshift-machine-api
+  register: existing_machineset_info
+
+- name: Set ami_id from fetched MachineSet
+  ansible.builtin.set_fact:
+    ami_id: "{{ existing_machineset_info.resources[0].spec.template.spec.providerSpec.value.ami.id }}"
+  when:
+    - existing_machineset_info.resources is defined
+    - existing_machineset_info.resources | length > 0
+    - existing_machineset_info.resources[0].spec.template.spec.providerSpec.value.ami.id is defined
+
+- name: Fail if AMI ID could not be fetched
+  ansible.builtin.fail:
+    msg: "Could not fetch AMI ID from MachineSet '{{ source_machineset_name }}'. Please check if it exists and is accessible."
+  when: ami_id is not defined or ami_id | length == 0
+
+- name: Display fetched AMI ID
+  ansible.builtin.debug:
+    msg: "Using AMI ID: {{ ami_id }}"
+
+- name: Get VPC information by cluster tag
+  amazon.aws.ec2_vpc_net_info:
+    filters:
+      "tag:Name": "{{ cluster_id }}-vpc"
+  register: vpc_info_result
+  # This task fetches VPCs that are tagged as owned by the specified cluster.
+  # OpenShift on AWS typically tags its resources this way.
+
+- ansible.builtin.set_fact:
+    num_vpcs: "{{ vpc_info_result.vpcs | length }}"
+
+- name: Verify a single VPC was found
+  ansible.builtin.fail:
+    msg: "Could not find a unique VPC for cluster '{{ cluster_id }}'. Found {{ num_vpcs }}. Please check the cluster name and AWS tags."
+  when: vpc_info_result.vpcs | length != 1
+  # This ensures that we found exactly one VPC matching our criteria.
+
+- name: Set VPC ID fact
+  ansible.builtin.set_fact:
+    cluster_vpc_id: "{{ vpc_info_result.vpcs[0].id }}"
+  # Store the found VPC ID in a fact for easy access in subsequent tasks.
+
+- name: Display Found VPC Information
+  ansible.builtin.debug:
+    msg:
+      - "Found VPC ID for cluster '{{ cluster_id }}': {{ cluster_vpc_id }}"
+      - "VPC CIDR Block: {{ vpc_info_result.vpcs[0].cidr_block }}"
+      - "VPC State: {{ vpc_info_result.vpcs[0].state }}"
+  # Output the key details of the found VPC.
+
+- name: Get subnets associated with the found VPC
+  amazon.aws.ec2_vpc_subnet_info:
+    filters:
+      vpc-id: "{{ cluster_vpc_id }}"
+  register: subnet_info_result
+  # Fetch all subnets belonging to the VPC identified in the previous steps.
+
+- name: Display Subnet Information
+  ansible.builtin.debug:
+    msg: "Subnets found for VPC {{ cluster_vpc_id }}:"
+  # Prepare for displaying subnet details.
+
+- name: Iterate and display details of each subnet
+  ansible.builtin.debug:
+    msg:
+      - "  Subnet ID: {{ item.id }}"
+      - "  Availability Zone: {{ item.availability_zone }}"
+      - "  CIDR Block: {{ item.cidr_block }}"
+      - "  State: {{ item.state }}"
+      - "  Tags: {{ item.tags }}"
+  loop: "{{ subnet_info_result.subnets }}"
+  loop_control:
+    label: "{{ item.id }}" # Make the debug output easier to read by showing subnet ID
+  # Loop through each found subnet and display its relevant information.
+
+- name: Create list of MachineSets
+  ansible.builtin.set_fact:
+    machinesets: []
+
+- name: "Create MachineSet for {{ az1 }}"
+  include_tasks: create_machineset.yaml
+  loop: "{{ availability_zones }}"
+
+- name: "Wait for Nodes to start"
+  include_tasks: wait_for_nodes.yaml
+  loop: "{{ machinesets }}"
+...

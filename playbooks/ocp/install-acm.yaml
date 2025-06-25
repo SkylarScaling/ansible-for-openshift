@@ -19,12 +19,17 @@
 #      private: yes
 #      confirm: no
   tasks:
-    - name: "OpenShift CLI login"
-      shell: "oc login -u {{ cluster_admin_user }} -p {{ cluster_admin_password }} https://api.{{ ocp_cluster_address }}:6443 --insecure-skip-tls-verify"
+    - include_role:
+        name: admin_oc_login
+      vars:
+        force: true #TODO This might not be needed anymore if k8s_auth works
+        cluster_address: "{{ ocp_cluster.name }}.{{ ocp_cluster.base_domain }}"
+        openshift_username: "{{ admin_user }}"
+        openshift_password: "{{ admin_password }}"
 
     - name: Set Playbook Facts
       set_fact:
-        cluster_address: "{{ ocp_cluster_address }}"
+        cluster_address: "{{ ocp_cluster.name }}.{{ ocp_cluster.base_domain }}"
 
     - include_role:
         name: install_acm

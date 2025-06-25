@@ -1,0 +1,20 @@
+---
+- name: Install OCP Platform Plus Infrastructure Components
+  gather_facts: false
+  hosts: localhost
+  tasks:
+    - debug:
+        msg: "Provisioning and Configuring OCP Cluster with Platform Plus on AWS"
+
+- name: Provision OCP Cluster on AWS via IPI
+  ansible.builtin.import_playbook: ../playbooks/ocp/provision-cluster.yaml
+
+- name: Creating Default Cluster Auth
+  ansible.builtin.import_playbook: ../playbooks/ocp/create-default-auth.yaml
+
+- name: Install ACM
+  ansible.builtin.import_playbook: ../playbooks/ocp/install-acm.yaml
+
+- name: Perform Day 2 Configuration
+  ansible.builtin.import_playbook: ../playbooks/acm/day2-config.yaml
+...

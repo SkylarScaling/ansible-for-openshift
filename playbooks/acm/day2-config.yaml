@@ -11,13 +11,16 @@
   tasks:
     - name: Set Playbook Facts
       set_fact:
-        cluster_address: "{{ ocp_cluster_address }}"
+        cluster_address: "{{ ocp_cluster.name }}.{{ ocp_cluster.base_domain }}"
 
     - include_role:
         name: admin_create_acm_service_account
 
     - include_role:
         name: install_odf_from_subscription
+
+    - include_role:
+        name: install_mco_from_subscription
 
     - include_role:
         name: install_acs_from_subscription
